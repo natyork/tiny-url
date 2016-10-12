@@ -45,11 +45,14 @@ app.post("/urls", (req, res) => {
 
 });
 
-app.get("/urls/:id", (req, res) => {
+app.get("/urls/:id", (req, res) => { //if client requests non-existant URL, should 404.
   let templateVars = { shortURL: req.params.id };
   console.log(urlDatabase[templateVars.shortURL]);
-  res.redirect(303, urlDatabase[templateVars.shortURL]);
-
+  if(!urlDatabase[templateVars.shortURL]){
+    res.status(404).send('Whoopsie! The site you are looking for can\'t be found so instead you get this sweet 404 message');
+  } else {
+    res.redirect(303, urlDatabase[templateVars.shortURL]); //this has no error handling at this point and user must include http:// in front of the web address they enter in order for this to work
+  }
   // res.render("urls_show", templateVars);
 });
 
