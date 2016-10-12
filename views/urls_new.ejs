@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head></head>
+  <body style="font-size:20px; padding:50px;">
+    <% include partials/_header %>
+    <form action="/urls" method="POST" style="margin:150px;">
+      <label for="longURL">Enter a URL:</label>
+      <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>
+
+<!-- /urls is the URI program that processes the form information -->
+<!-- for = "longURL" The ID of a labelable form-related element in the same document as the label element. The first such element in the document with an ID matching the value of the for attribute is the labeled control for this label element. -->
+<!-- input type = 'submit' per mdn docs type=submit is defined as a button that submits the form -->
