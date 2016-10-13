@@ -1,18 +1,26 @@
-var express = require("express");
-const app = express();
-app.set("view engine", "ejs");
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: false }));
+// Welcome to the Wee App Server...
 
+// Dependencies
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+
+// Configuration
+app.set("view engine", "ejs");
 const PORT = process.env.PORT || 8080;
 
-var urlDatabase = {
+// Middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// Constants
+
+const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
 
-// Tiny URL gets & posts
+// Routes
 app.get("/", (req, res) => { //redirects to /urls
   res.redirect(303, "/urls");
 });
@@ -28,7 +36,18 @@ app.get("/urls/new", (req, res) => { //renders url_new
 
 app.post("/urls", (req, res) => { //post from form on /urls/new
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = (req.body).longURL; //updates urlDatabase with new shortURL: longURL
+  urlDatabase[shortURL] = "weee";
+  while(urlDatabase[shortURL]) {
+    console.log(shortURL);
+    shortURL = generateRandomString();
+  }// error handling for a duplicate shortURL
+  var protocol = /http:\/\//
+  if (protocol.test((req.body).longURL) === true){
+    urlDatabase[shortURL] = (req.body).longURL; //updates urlDatabase with new shortURL: longURL
+  } else {
+    urlDatabase[shortURL] = "http://" + (req.body).longURL;
+  }// if user does not enter http://  need to add http://
+  //if user does enter http://just use longURL
   res.redirect(303, `http://localhost:8080/urls/${shortURL}`); //redirects to urls/:id
 });
 
@@ -65,7 +84,9 @@ app.post("/urls/:id", (req, res) => { //post from update form on urls_show
   res.redirect(303, "/urls");
 });
 
+// Edit
 
+// Delete
 
 
 app.listen(PORT, () => {
