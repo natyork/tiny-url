@@ -4,10 +4,13 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-
+const cookieParser = require("cookie-parser");
 // CONFIGURATION
 app.set("view engine", "ejs");
+
 const PORT = process.env.PORT || 8080;
+
+app.use(cookieParser());
 
 // MIDDLEWARE
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -17,6 +20,9 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+let username = "";
+
 
 // ROUTES
 
@@ -28,14 +34,18 @@ app.get("/", (req, res) => {
 
 // renders urls_index
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = {
+    username: req.cookies["username"],
+    urls: urlDatabase
+  };
   res.render("urls_index", templateVars);
 });
 
 
 // renders url_new
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 
@@ -60,6 +70,24 @@ app.post("/urls", (req, res) => {
   res.redirect(303, `http://localhost:8080/urls/${shortURL}`);
 });
 
+// post from header login form
+// sets cookie
+// redirects to /
+app.post("/login", (req, res) => {
+  username = req.body.username;
+  res.cookie("username", username);
+  res.redirect(303,"/");
+});
+
+
+// post from header logout form
+// clears cookie
+// redirects to /
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect(303, "/");
+});
+
 
 // post from delete form on urls, deletes URL entry from urLDatabase, then redirects to /urls
 app.post("/urls/:id/delete", (req, res) => {
@@ -74,7 +102,11 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let shorty = req.params.id;
   let longy = urlDatabase[shorty];
-  let templateVars = { "shortURL": shorty, "longy": longy };
+  let templateVars = {
+    username: req.cookies["username"],
+    shortURL: shorty,
+    longy: longy
+  };
   if(!urlDatabase[shorty]){
     res.status(404).send('Whoopsie! The site you are looking for can\'t be found so instead you get this wee 404 message');
   } else {
@@ -85,7 +117,7 @@ app.get("/urls/:id", (req, res) => {
 
 // redirects to long URL corresponding to :id
 app.get("/u/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id };
+  let templateVars = { shortURL: req.params.id};
   if(!urlDatabase[templateVars.shortURL]){
     res.status(404).send('Whoopsie! The site you are looking for can\'t be found so instead you get this wee 404 message');
   } else {
@@ -98,7 +130,7 @@ app.get("/u/:id", (req, res) => {
 //  -form submitted with empty field
 //  -add protocol to longURL if not included by user
 app.post("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id };
+  let templateVars = {shortURL: req.params.id};
   if (((req.body).longURL) !== "") {
     var protocol = /http:\/\//
     if (protocol.test((req.body).longURL) === true){
