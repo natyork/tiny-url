@@ -1,15 +1,11 @@
 <h1>Wee App</h1>
-<div><a href="/register">Register</a></div>
 
   <% if(current_user) { %>
   <h2><%=username%></h2>
-  <p>
-    <form action="/logout" method="POST">
-      <input type="submit" value="Logout"/>
-    </form>
-  </p>
-  <p><a href="/urls">My Wee Links</a></p>
+  <form action="/logout" method="POST">
+    <input type="submit" value="Logout"/>
+  </form>
+  <a href="/urls">My Wee Links</a>
   <% } else { %>
-  <p><a href="/login">Login</a></p>
-  <p><a href="/register">Register</a></p>
+  <a href="/login">Login</a>  <a href="/register">Register</a>
   <% } %>
