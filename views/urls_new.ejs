@@ -9,12 +9,15 @@
   </header>
 
   <h2>Create New Wee URL</h2>
+  <p>
+    <form action="/urls" method="POST">
+      <label for="longURL">Enter a URL to make wee:</label>
+      <input id="longURL" type="text" name="longURL" placeholder="http://"/>
+      <input type="submit" value="Submit"/>
+    </form>
+  </p>
 
-  <form action="/urls" method="POST">
-    <label for="longURL">Enter a URL to make wee:</label>
-    <input id="longURL" type="text" name="longURL" placeholder="http://"/>
-    <input type="submit" value="Submit"/>
-  </form>
+   <p><a href="/urls">See All Wee URLs</a></p>
   </body>
 </html>
 

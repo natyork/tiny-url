@@ -1,28 +1,15 @@
 <h1>Wee App</h1>
+<div><a href="/register">Register</a></div>
 
-
-  <% if(username) { %>
+  <% if(current_user) { %>
+  <h2><%=username%></h2>
   <p>
-    <span><%=username%></span>
     <form action="/logout" method="POST">
       <input type="submit" value="Logout"/>
     </form>
   </p>
+  <p><a href="/urls">My Wee Links</a></p>
   <% } else { %>
-  <p>
-    <form action="/login" method="POST">
-
-      <input id="username" type="text" name="username" placeholder="username"/>
-      <input type="submit" value="Login"/>
-    </form>
-  </p>
+  <p><a href="/login">Login</a></p>
+  <p><a href="/register">Register</a></p>
   <% } %>
-
-
-
-
-
-
-<!-- Change the login form logic in _header.ejs to check to see if username is present. If so, instead of showing the login form, display the username and a separate logout form which will POST to /logout.
-
-The /logout endpoint should clear the cookie and also redirect the user back to the root path. -->
