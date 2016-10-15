@@ -6,6 +6,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt");
 
 
 // CONFIGURATION
@@ -132,7 +133,6 @@ app.post("/urls", (req, res) => {
 // redirects to /
 app.post("/login", (req, res) => {
   let username = req.body.email;
-  let password = req.body.password;
   let unMatch = false;
   let pwMatch = false;
   let id = "";
@@ -144,7 +144,7 @@ app.post("/login", (req, res) => {
     }
   }
 
-  if (id && users[id].password === password){
+  if (id && bcrypt.compareSync(req.body.password, users[id].password )) {
     pwMatch = true;
   }
 
@@ -168,8 +168,8 @@ app.post("/logout", (req, res) => {
 
 
 
-// posts from register form *
-// generates unique id and stores email/ pw
+// posts from register form
+// generates unique id and stores email/ hased pw
 //  -includes check for duplicate randomId creation
 //  -checks for exisiting entry in database
 // set user_id cookie
@@ -181,7 +181,7 @@ app.post("/register", (req, res) => {
     randomId = generateRandomString();
   }
   let username = req.body.email;
-  let password = req.body.password;
+  let password = bcrypt.hashSync(req.body.password, 10);
 
   let match = false;
   for (key in users) {
@@ -198,6 +198,7 @@ app.post("/register", (req, res) => {
     users[randomId].username = username;
     users[randomId].password = password;
     users[randomId].urls = {};
+    console.log(users);
 
     res.cookie("user_id", randomId);
 
