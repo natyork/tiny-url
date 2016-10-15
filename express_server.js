@@ -6,6 +6,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const cookieSession = require('cookie-session')
 const bcrypt = require("bcrypt");
 
 
@@ -35,7 +36,7 @@ const users = {};
 
 // redirects to /urls if logged in, otherwise renders home with links to register or login
 app.get("/", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   if (current_user) {
     res.redirect(303, "/urls");
   } else {
@@ -70,7 +71,7 @@ app.get("/login", (req, res) => {
 
 // renders urls_index if logged in, otherwise redirects to /
 app.get("/urls", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   if(current_user) {
     let username = users[current_user].username;
     let templateVars = {
@@ -88,7 +89,7 @@ app.get("/urls", (req, res) => {
 
 // renders url_new if logged in, otherwise redirects to /
 app.get("/urls/new", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   if(current_user) {
     let username = users[current_user].username;
     let templateVars = {
@@ -108,7 +109,7 @@ app.get("/urls/new", (req, res) => {
 //  -duplicate shortURL
 //  -add protocol to longURL if not included by user
 app.post("/urls", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   let shortURL = generateRandomString();
 
   while(urlDatabase[shortURL]) {
@@ -149,7 +150,7 @@ app.post("/login", (req, res) => {
   }
 
   if (unMatch && pwMatch) {
-    res.cookie("user_id", id);
+    req.session.user_id = id;
     res.redirect("/");
   } else {
     res.status(403).send('Whoopsie! 403 Forbidden.')
@@ -200,7 +201,7 @@ app.post("/register", (req, res) => {
     users[randomId].urls = {};
     console.log(users);
 
-    res.cookie("user_id", randomId);
+    req.session.user_id = randomId;
 
     res.redirect(303, "/urls");
   }
@@ -209,7 +210,7 @@ app.post("/register", (req, res) => {
 
 // post from delete form on urls, deletes URL entry from users[current_user].urls and urLDatabase, then redirects to /urls
 app.post("/urls/:id/delete", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   let shortURL = req.params.id;
   delete users[current_user].urls[shortURL];
   delete urlDatabase[shortURL];
@@ -221,7 +222,7 @@ app.post("/urls/:id/delete", (req, res) => {
 // includes error handling if shortURL does not exist
 // TODO: clean up all the variables that were used to break down the problem
 app.get("/urls/:id", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   if(current_user) {
     let username = users[current_user].username;
     let shortURL = req.params.id;
@@ -260,7 +261,7 @@ app.get("/u/:id", (req, res) => {
 //  -form submitted with empty field
 //  -add protocol to longURL if not included by user
 app.post("/urls/:id", (req, res) => {
-  let current_user = req.cookies.user_id;
+  let current_user = req.session.user_id;
   let shortURL = req.params.id;
   let longURL = req.body.longURL;
   if (longURL !== "") {
