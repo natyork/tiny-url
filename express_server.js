@@ -15,11 +15,14 @@ app.set("view engine", "ejs");
 
 const PORT = process.env.PORT || 8080;
 
-app.use(cookieParser());
 
 
 // MIDDLEWARE
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
 
 
 // CONSTANTS
@@ -162,7 +165,7 @@ app.post("/login", (req, res) => {
 // clears cookie
 // redirects to /
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect(303, "/");
 });
 
@@ -268,11 +271,11 @@ app.post("/urls/:id", (req, res) => {
     var protocol = /http:\/\//
     if (protocol.test(longURL) === true){
       users[current_user].urls[shortURL] = longURL;
-      urLDatabase[shortURL] = longURL;
+      urlDatabase[shortURL] = longURL;
 
     } else {
       users[current_user].urls[shortURL] = "http://" + longURL;
-      urLDatabase[shortURL] = "http://" + longURL;
+      urlDatabase[shortURL] = "http://" + longURL;
 
     }
     res.redirect(303, "/urls");
