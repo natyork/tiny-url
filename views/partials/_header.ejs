@@ -1,7 +1,7 @@
 <h1>Wee App</h1>
 
   <% if(current_user) { %>
-  <h2><%=username%></h2>
+  <h2><%= username %></h2>
   <form action="/logout" method="POST">
     <input type="submit" value="Logout"/>
   </form>

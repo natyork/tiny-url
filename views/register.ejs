@@ -5,14 +5,16 @@
   </head>
 
   <body>
-    <h1>Wee App</h1>
+    <header>
+      <% include ./partials/_header %>
+    </header>
 
-    <p>
+    <div>
       <form action="/register" method="POST">
         <input id="email" type="email" name="email" placeholder="email"/>
         <input id="password" type="password" name="password" placeholder="password"/>
         <input type="submit" value="Register"/>
       </form>
-    </p>
+    </div>
   </body>
 </html>

@@ -22,55 +22,74 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // CONSTANTS
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  test_1: "http://www.lighthouselabs.ca",
+  test_2: "http://www.google.com"
 };
 
-const users = {
-  blarp3: {
-    id: "blarp3",
-    username: "blarp@bmail.com",
-    password: "blarpityblarp"
-  }
-};
+const users = {};
+
 
 
 // ROUTES
 
-// redirects to /urls if logged in, otherwise redirects to /login
+// redirects to /urls if logged in, otherwise renders home with links to register or login
 app.get("/", (req, res) => {
   let current_user = req.cookies.user_id;
   if (current_user) {
     res.redirect(303, "/urls");
   } else {
-    res.redirect(303, "/login");
+    let templateVars = {
+      current_user: current_user,
+      username: ""
+  }
+  res.render("home", templateVars);
   }
 });
 
 
-// renders urls_index if logged in, otherwise redirects to /login
+// render register page
+app.get("/register", (req, res) => {
+  let templateVars = {
+    current_user: false,
+    username: ""
+  };
+  res.render("register", templateVars);
+});
+
+
+// render login page
+app.get("/login", (req, res) => {
+    let templateVars = {
+    current_user: false,
+    username: ""
+  };
+  res.render("login", templateVars);
+});
+
+
+// renders urls_index if logged in, otherwise redirects to /
 app.get("/urls", (req, res) => {
   let current_user = req.cookies.user_id;
   if(current_user) {
     let username = users[current_user].username;
     let templateVars = {
       username: username,
-      urls: urlDatabase,
+      urls: users[current_user].urls,
       current_user: current_user
     };
     // res.status(200); //not sure if this needs to be here
     res.render("urls_index", templateVars);
   } else {
-    res.redirect(303, "/login"); // instructions conflict on this point regarding status code (401 versus redirect)
+    res.redirect(303, "/"); // instructions conflict 401 versus redirect
   }
 });
 
 
-// renders url_new
+// renders url_new if logged in, otherwise redirects to /
 app.get("/urls/new", (req, res) => {
   let current_user = req.cookies.user_id;
   if(current_user) {
-    let username = users[current_user].email;
+    let username = users[current_user].username;
     let templateVars = {
       username: username,
       current_user: current_user
@@ -78,16 +97,17 @@ app.get("/urls/new", (req, res) => {
     // res.status(200); //not sure if this needs to be here
     res.render("urls_new", templateVars);
   } else {
-    res.redirect(303, "/login"); //instructions conflict on this point regarding status code (401 versus redirect)
+    res.redirect(303, "/"); // instructions conflict 401 versus redirect
   }
 });
 
 
-// post from create form in /urls/new, updates urlDatabase, then redirects to urls/:id
+// post from create form in /urls/new, updates users[currentUser].urls and urlDatabase, then redirects to urls/:id
 // includes error handling for:
 //  -duplicate shortURL
 //  -add protocol to longURL if not included by user
 app.post("/urls", (req, res) => {
+  let current_user = req.cookies.user_id;
   let shortURL = generateRandomString();
 
   while(urlDatabase[shortURL]) {
@@ -96,19 +116,16 @@ app.post("/urls", (req, res) => {
 
   var protocol = /http:\/\//
   if (protocol.test((req.body).longURL) === true){
-    urlDatabase[shortURL] = (req.body).longURL;
+    users[current_user].urls[shortURL] = req.body.longURL;
+    urlDatabase[shortURL] = req.body.longURL;
   } else {
-    urlDatabase[shortURL] = "http://" + (req.body).longURL;
+    users[current_user].urls[shortURL] = "http://" + req.body.longURL;
+    urlDatabase[shortURL] = "http://" + req.body.longURL;
   }
 
   res.redirect(303, `http://localhost:8080/urls/${shortURL}`);
 });
 
-
-// render login page
-app.get("/login", (req, res) => {
-  res.render("login");
-});
 
 // post from login form
 // sets cookie
@@ -116,24 +133,19 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   let username = req.body.email;
   let password = req.body.password;
-  console.log(users);
   let unMatch = false;
   let pwMatch = false;
   let id = "";
 
   for (key in users) {
-    console.log(key);
     if (users[key].username === username){
       id = users[key].id;
-      console.log(id);
-      console.log("un-match");
       unMatch = true;
     }
   }
 
   if (id && users[id].password === password){
     pwMatch = true;
-    console.log(pwMatch);
   }
 
   if (unMatch && pwMatch) {
@@ -145,10 +157,6 @@ app.post("/login", (req, res) => {
 });
 
 
-
-
-
-
 // post from header logout form
 // clears cookie
 // redirects to /
@@ -158,13 +166,9 @@ app.post("/logout", (req, res) => {
 });
 
 
-// render register page
-app.get("/register", (req, res) => {
-  res.render("register");
-});
 
 
-// posts from register form *********************
+// posts from register form *
 // generates unique id and stores email/ pw
 //  -includes check for duplicate randomId creation
 //  -checks for exisiting entry in database
@@ -182,10 +186,7 @@ app.post("/register", (req, res) => {
   let match = false;
   for (key in users) {
     if (users[key].username === username){
-      console.log("match");
       match = true;
-    } else {
-      console.log("no match")
     }
   }
   if (match || !username || !password){
@@ -193,61 +194,63 @@ app.post("/register", (req, res) => {
   }
   else {
     users[randomId] = {};
-    console.log(users[randomId]);
     users[randomId].id = randomId;
     users[randomId].username = username;
     users[randomId].password = password;
+    users[randomId].urls = {};
 
     res.cookie("user_id", randomId);
 
-    res.redirect(303, "/");
+    res.redirect(303, "/urls");
   }
 });
 
 
-// post from delete form on urls, deletes URL entry from urLDatabase, then redirects to /urls
+// post from delete form on urls, deletes URL entry from users[current_user].urls and urLDatabase, then redirects to /urls
 app.post("/urls/:id/delete", (req, res) => {
-  let templateVars = {shortURL: req.params.id};
-  delete urlDatabase[templateVars.shortURL];
+  let current_user = req.cookies.user_id;
+  let shortURL = req.params.id;
+  delete users[current_user].urls[shortURL];
+  delete urlDatabase[shortURL];
   res.redirect(303,"/urls");
 });
 
 
-// renders urls_show, includes error handling if shortURL does not exist
+// renders urls_show, otherwise redirects to /
+// includes error handling if shortURL does not exist
 // TODO: clean up all the variables that were used to break down the problem
 app.get("/urls/:id", (req, res) => {
-
-let current_user = req.cookies.user_id;
+  let current_user = req.cookies.user_id;
   if(current_user) {
-    let username = users[current_user].email;
+    let username = users[current_user].username;
     let shortURL = req.params.id;
-    let longURL = urlDatabase[shortURL];
+    let longURL = users[current_user].urls[shortURL];
     let templateVars = {
       username: username,
       shortURL: shortURL,
       longURL: longURL,
       current_user: current_user
     };
-    if(!urlDatabase[shortURL]){
+    if(!users[current_user].urls[shortURL]){
       res.status(404).send('Whoopsie! The site you are looking for can\'t be found so instead you get this wee 404 message');
     } else {
       // res.status(200); //not sure if this needs to be here
       res.render("urls_show", templateVars);
     }
   } else {
-    res.redirect(303, "/login"); //instructions conflict on this point regarding status code (401 versus redirect)
+    res.redirect(303, "/"); // instructions conflict 401 versus redirect
   }
 });
 
 
 // redirects to long URL corresponding to :id
 app.get("/u/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id};
-  if(!urlDatabase[templateVars.shortURL]){
+  let shortURL = req.params.id;
+  if(!urlDatabase[shortURL]){
     res.status(404).send('Whoopsie! The site you are looking for can\'t be found so instead you get this wee 404 message');
   } else {
     // res.status(200); //not sure if this needs to be here
-    res.redirect(303, urlDatabase[templateVars.shortURL]);
+    res.redirect(303, urlDatabase[shortURL]);
   }
 });
 
@@ -256,13 +259,19 @@ app.get("/u/:id", (req, res) => {
 //  -form submitted with empty field
 //  -add protocol to longURL if not included by user
 app.post("/urls/:id", (req, res) => {
-  let templateVars = {shortURL: req.params.id};
-  if (((req.body).longURL) !== "") {
+  let current_user = req.cookies.user_id;
+  let shortURL = req.params.id;
+  let longURL = req.body.longURL;
+  if (longURL !== "") {
     var protocol = /http:\/\//
-    if (protocol.test((req.body).longURL) === true){
-      urlDatabase[templateVars.shortURL] = (req.body).longURL;
+    if (protocol.test(longURL) === true){
+      users[current_user].urls[shortURL] = longURL;
+      urLDatabase[shortURL] = longURL;
+
     } else {
-      urlDatabase[templateVars.shortURL] = "http://" + (req.body).longURL;
+      users[current_user].urls[shortURL] = "http://" + longURL;
+      urLDatabase[shortURL] = "http://" + longURL;
+
     }
     res.redirect(303, "/urls");
   }
@@ -281,9 +290,9 @@ function generateRandomString() {
   let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
   let string_length = 6;
   let randomstring = '';
-  for (let i=0; i<string_length; i++) {
+  for (let i = 0; i < string_length; i++) {
     let rnum = Math.floor(Math.random() * chars.length);
-    randomstring += chars.substring(rnum,rnum+1);
+    randomstring += chars.substring(rnum, rnum + 1);
   }
   return randomstring;
 }

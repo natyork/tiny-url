@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Wee App Login</title>
+  <title>Wee App</title>
 </head>
 <body>
-  <form action="/login" method="POST">
-        <input id="email" type="email" name="email" placeholder="email"/>
-        <input id="password" type="password" name="password" placeholder="password"/>
-        <input type="submit" value="Login"/>
-  </form>
+  <header>
+    <% include ./partials/_header %>
+  </header>
+
+  <div>
+    <form action="/login" method="POST">
+          <input id="email" type="email" name="email" placeholder="email"/>
+          <input id="password" type="password" name="password" placeholder="password"/>
+          <input type="submit" value="Login"/>
+    </form>
+  </div>
 </body>
 </html>
