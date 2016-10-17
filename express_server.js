@@ -23,6 +23,7 @@ app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }));
+app.use(express.static('public'));
 
 
 // CONSTANTS
@@ -54,21 +55,31 @@ app.get("/", (req, res) => {
 
 // render register page
 app.get("/register", (req, res) => {
-  let templateVars = {
-    current_user: false,
-    username: ""
-  };
-  res.render("register", templateVars);
+  let current_user = req.session.user_id;
+  if (current_user) {
+    res.redirect(303, "/urls");
+  } else {
+    let templateVars = {
+      current_user: false,
+      username: ""
+    };
+    res.status(200).render("register", templateVars);
+  }
 });
 
 
 // render login page
 app.get("/login", (req, res) => {
+  let current_user = req.session.user_id;
+  if (current_user) {
+    res.redirect(303, "/urls");
+  } else {
     let templateVars = {
-    current_user: false,
-    username: ""
-  };
-  res.render("login", templateVars);
+      current_user: false,
+      username: ""
+    };
+    res.status(200).render("login", templateVars);
+  }
 });
 
 
